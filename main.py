@@ -3,24 +3,24 @@
 # Deep Learning
 # Program 1: Simple ANN model
 
+import activations
 import numpy as np
 import pandas as pd
 import random
-from scipy.special import expit
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
+
 
 class ANN(object):
 
     def __init__(self):
-        # Network layers
-        self.input = 0
-        self.hidden = 3
-        self.output = 1
+        # Randomize the synapse values from the input layer leading to hidden layer 1
+        self.W1 = np.random.randn(11, 5)
+        self.W2 = np.random.randn(5, 1)
         # Read the data from csv file
         dataset = pd.read_csv('dataset.csv')
-        # Drop Surnames and Geography from set
-        dataset = dataset.drop(['Surname', 'Geography'], axis=1)
+        # Dropping CustomerId, Surname, Geography from attributes
+        dataset = dataset.drop(['CustomerId', 'Surname', 'Geography'], axis=1)
 
         # Split the Dataset into depend/indep x/y values
         x = dataset.iloc[:, :-1]
@@ -31,59 +31,58 @@ class ANN(object):
         # Drop Gender from dataset and join the onehot encoded
         x = x.drop(['Gender'], axis=1)
         x = x.join(one_hot)
+        # Check for NaN values in data.
+        x = activations.missing_values(x)
 
-        x_train, x_tests, y_train, y_test = train_test_split(x, y, test_size=.20)
-
+        x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=.20, random_state=12345)
         SC = StandardScaler()
+        # Scale data 'standardscaler defaults
         x_train = SC.fit_transform(x_train)
+        # Add Bias term
+        x_train = np.c_[np.ones(x_train.shape[0]), x_train]
         x_train = pd.DataFrame(x_train)
+        # Fix indexing on dataframe
+        y_train = pd.DataFrame(y_train)
+        y_train = y_train.reset_index()
+        y_train = y_train.drop(['index'], axis=1)
 
-        # Randomize the synapse values from the input layer leading to hidden layer 1
-        self.W1 = np.random.randn(11, 10)
-        # Randomize the synapse values from the hidden layer 1 to the output layer
-        self.W2 = np.random.randn(10, 1)
+        x_test = SC.transform(x_test)
+        x_test = np.c_[np.ones(x_test.shape[0]), x_test]
+        x_test = pd.DataFrame(x_test)
 
-
-        for i in np.arange(10000):
+        for i in np.arange(100000):
             ran = random.randint(0, 7199)
-            self.input = x_train.iloc[[ran]]
+            self.layer0 = x_train.iloc[[ran]]
             y_actual = y_train.iloc[[ran]]
-            layer1 = self.sigmoid_activation(np.dot(self.input, self.W1))
-            layer2 = self.sigmoid_activation(np.dot(layer1, self.W2))
 
-            layer2_error = self.cost_function(layer2[0], y_actual)
-            if(i % 100) == 0:
-                print('Error: ' + str(np.mean(np.abs(layer2_error))))
-                print(ran)
+            self.layer1 = activations.sigmoid_activation(np.dot(self.layer0, self.W1))
+            self.output = activations.sigmoid_activation(np.dot(self.layer1, self.W2))
 
-            layer2_delta = layer2_error*self.derivative_sigmoid(layer2)
+            error = activations.cost_function(self.output[0], y_actual.iloc[0])
+            if (i % 100) == 0:
+                print('Error: ' + str(np.mean(np.abs(error))))
+                print(i)
 
-            layer1_error = layer2_delta.dot(self.W2.T)
+            delta_w2 = np.dot(self.layer1.T, (2*(y_actual - self.output) * activations.derivative_sigmoid(self.output)))
+            delta_w1 = np.dot(self.layer0.T, (np.dot(2*(y_actual - self.output) *
+                                                     activations.derivative_sigmoid(self.output),
+                                                     self.W2.T) * activations.derivative_sigmoid(self.layer1)))
 
-            layer1_delta = layer1_error*self.derivative_sigmoid(layer1)
+            self.W1 += delta_w1
+            self.W2 += delta_w2
 
+        testing = []
+        for k in np.arange(x_test.shape[0]):
+            self.layer0 = x_test.iloc[[k]]
+            self.layer1 = activations.sigmoid_activation(np.dot(self.layer0, self.W1))
+            self.output = activations.sigmoid_activation(np.dot(self.layer1, self.W2))
+            testing.append(self.output)
+        df = pd.DataFrame({'tests': testing})
+        print(testing)
+        print('testing')
 
-            self.W2 = self.W2 + layer1.T.dot(layer2_delta)
-            self.W1 = self.W1 + self.input.T.dot(layer1_delta)
-        print('test')
-
-
-
-
-    # sigmoid activation function
-    def sigmoid_activation(self, z):
-        return expit(z)
-
-    # derivative of the sigmoid function for back propagation
-    def derivative_sigmoid(self, z):
-        return z*(1-z)
-
-    def cost_function(self, y_hat, y_actual):
-        return 0.5*sum((y_actual-y_hat)**2)
 
 
 if __name__ == '__main__':
 
     ANN = ANN()
-
-    print('test')
