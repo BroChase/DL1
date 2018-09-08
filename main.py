@@ -50,26 +50,26 @@ class ANN(object):
         x_test = np.c_[np.ones(x_test.shape[0]), x_test]
         x_test = pd.DataFrame(x_test)
 
-        for i in np.arange(100000):
+        for i in np.arange(1000):
             ran = random.randint(0, 7199)
             self.layer0 = x_train.iloc[[ran]]
             y_actual = y_train.iloc[[ran]]
 
-            self.layer1 = activations.sigmoid_activation(np.dot(self.layer0, self.W1))
+            self.layer1 = activations.relu_activation(np.dot(self.layer0, self.W1))
             self.output = activations.sigmoid_activation(np.dot(self.layer1, self.W2))
 
-            error = activations.cost_function(self.output[0], y_actual.iloc[0])
-            if (i % 100) == 0:
-                print('Error: ' + str(np.mean(np.abs(error))))
-                print(i)
+            # error = activations.cost_function(self.output[0], y_actual.iloc[0].values)
+            # if (i % 100) == 0:
+            #     print(y_actual.iloc[0].values, self.output[0])
+            #     print('Error: ' + str(np.mean(np.abs(error))))
 
             delta_w2 = np.dot(self.layer1.T, (2*(y_actual - self.output) * activations.derivative_sigmoid(self.output)))
-            delta_w1 = np.dot(self.layer0.T, (np.dot(2*(y_actual - self.output) *
-                                                     activations.derivative_sigmoid(self.output),
-                                                     self.W2.T) * activations.derivative_sigmoid(self.layer1)))
+            delta_w1 = np.dot(self.layer0.T,
+                              (np.dot(2*(y_actual - self.output) * activations.derivative_sigmoid(self.output),
+                                      self.W2.T) * activations.derivative_relu(self.layer1)))
 
-            self.W1 += delta_w1
-            self.W2 += delta_w2
+            self.W1 += delta_w1 * .2
+            self.W2 += delta_w2 * .2
 
         testing = []
         for k in np.arange(x_test.shape[0]):
@@ -78,6 +78,8 @@ class ANN(object):
             self.output = activations.sigmoid_activation(np.dot(self.layer1, self.W2))
             testing.append(self.output)
         df = pd.DataFrame({'tests': testing})
+        y_test = pd.DataFrame(y_test)
+        y_test = y_test.join(df)
         print(testing)
         print('testing')
 
