@@ -14,10 +14,6 @@ from sklearn.model_selection import train_test_split
 class ANN(object):
 
     def __init__(self):
-        # Randomize the synapse values from the input layer leading to hidden layer 1
-        self.W1 = np.random.randn(11, 5)
-        self.W2 = np.random.randn(5, 3)
-        self.W3 = np.random.randn(3, 1)
         # Read the data from csv file
         dataset = pd.read_csv('dataset.csv')
         # Dropping CustomerId, Surname, Geography from attributes
@@ -51,16 +47,24 @@ class ANN(object):
         x_test = np.c_[np.ones(x_test.shape[0]), x_test]
         x_test = pd.DataFrame(x_test)
 
+        # Randomize the synapse values from the input layer leading to hidden layer 1
+        self.W1 = np.random.randn(11, 5)
+        self.W2 = np.random.randn(5, 3)
+        self.W3 = np.random.randn(3, 1)
+        self.b1 = np.array([1])
+        self.b2 = np.array([1])
+        self.bw1 = np.random.randn(1, 3)
+        self.bw2 = np.random.randn(1, 1)
+
         for i in np.arange(20000):
             ran = random.randint(0, 7199)
             self.layer0 = x_train.iloc[[ran]]
             y_actual = y_train.iloc[[ran]]
-
-            # Hidden layer 1 Relu activation
+            # Hidden layer 1 Relu 5 nodes
             self.layer1 = activations.relu_activation(np.dot(self.layer0, self.W1))
-            # Hidden layer 2 sigmoid activation
+            # Hidden layer 2 sigmoid activation 3 nodes
             self.layer2 = activations.sigmoid_activation(np.dot(self.layer1, self.W2))
-            # output layer sigmoid activation
+            # output layer sigmoid activation 1 node
             self.output = activations.sigmoid_activation(np.dot(self.layer2, self.W3))
 
             error = activations.cost_function(self.output[0], y_actual.iloc[0].values)
@@ -76,6 +80,7 @@ class ANN(object):
             self.W3 += np.dot(self.layer2.T, delta_w3)
             self.W2 += np.dot(self.layer1.T, delta_w2)
             self.W1 += np.dot(self.layer0.T, delta_w1)
+
 
         testing = []
         for k in np.arange(x_test.shape[0]):
