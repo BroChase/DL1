@@ -51,23 +51,26 @@ class ANN(object):
         self.W1 = np.random.randn(11, 5)
         self.W2 = np.random.randn(5, 3)
         self.W3 = np.random.randn(3, 1)
-        self.b1 = np.array([1])
-        self.b2 = np.array([1])
+        self.b1 = np.full((1, 1), 1)
+        self.b2 = np.full((1, 1), 1)
         self.bw1 = np.random.randn(1, 3)
         self.bw2 = np.random.randn(1, 1)
-
+        alpha = 0.4
         for i in np.arange(20000):
             ran = random.randint(0, 7199)
-            self.layer0 = x_train.iloc[[ran]]
-            y_actual = y_train.iloc[[ran]]
+            self.layer0 = x_train.iloc[[20]]
+            y_actual = y_train.iloc[[20]]
             # Hidden layer 1 Relu 5 nodes
             self.layer1 = activations.relu_activation(np.dot(self.layer0, self.W1))
             # Hidden layer 2 sigmoid activation 3 nodes
             self.layer2 = activations.sigmoid_activation(np.dot(self.layer1, self.W2))
+            # self.layer2 = self.layer2 + activations.sigmoid_activation(np.dot(self.b1, self.bw1))
             # output layer sigmoid activation 1 node
             self.output = activations.sigmoid_activation(np.dot(self.layer2, self.W3))
+            # self.output = self.output + activations.sigmoid_activation(np.dot(self.b2, self.bw2))
 
             error = activations.cost_function(self.output[0], y_actual.iloc[0].values)
+
             if (i % 100) == 0:
                 print(y_actual.iloc[0].values, self.output[0])
                 print('Error: ' + str(np.mean(np.abs(error))))
@@ -76,6 +79,11 @@ class ANN(object):
             delta_w3 = output_error * activations.derivative_sigmoid(self.output)
             delta_w2 = np.dot(delta_w3, self.W3.T) * activations.derivative_sigmoid(self.layer2)
             delta_w1 = np.dot(delta_w2, self.W2.T) * activations.derivative_relu(self.layer1)
+            #
+            # delta_b1 = np.dot(delta_w3, self.bw2.T) * activations.derivative_sigmoid(self.b2)
+            # self.bw2 += np.dot(self.b2.T, delta_w3)
+            # self.bw1 += np.dot(self.b1.T, delta_b1)
+            # todo update the bias terms on back prop
 
             self.W3 += np.dot(self.layer2.T, delta_w3)
             self.W2 += np.dot(self.layer1.T, delta_w2)
