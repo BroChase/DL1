@@ -16,7 +16,8 @@ class ANN(object):
     def __init__(self):
         # Randomize the synapse values from the input layer leading to hidden layer 1
         self.W1 = np.random.randn(11, 5)
-        self.W2 = np.random.randn(5, 1)
+        self.W2 = np.random.randn(5, 3)
+        self.W3 = np.random.randn(3, 1)
         # Read the data from csv file
         dataset = pd.read_csv('dataset.csv')
         # Dropping CustomerId, Surname, Geography from attributes
@@ -50,32 +51,38 @@ class ANN(object):
         x_test = np.c_[np.ones(x_test.shape[0]), x_test]
         x_test = pd.DataFrame(x_test)
 
-        for i in np.arange(1000):
+        for i in np.arange(20000):
             ran = random.randint(0, 7199)
             self.layer0 = x_train.iloc[[ran]]
             y_actual = y_train.iloc[[ran]]
 
+            # Hidden layer 1 Relu activation
             self.layer1 = activations.relu_activation(np.dot(self.layer0, self.W1))
-            self.output = activations.sigmoid_activation(np.dot(self.layer1, self.W2))
+            # Hidden layer 2 sigmoid activation
+            self.layer2 = activations.sigmoid_activation(np.dot(self.layer1, self.W2))
+            # output layer sigmoid activation
+            self.output = activations.sigmoid_activation(np.dot(self.layer2, self.W3))
 
-            # error = activations.cost_function(self.output[0], y_actual.iloc[0].values)
-            # if (i % 100) == 0:
-            #     print(y_actual.iloc[0].values, self.output[0])
-            #     print('Error: ' + str(np.mean(np.abs(error))))
+            error = activations.cost_function(self.output[0], y_actual.iloc[0].values)
+            if (i % 100) == 0:
+                print(y_actual.iloc[0].values, self.output[0])
+                print('Error: ' + str(np.mean(np.abs(error))))
 
-            delta_w2 = np.dot(self.layer1.T, (2*(y_actual - self.output) * activations.derivative_sigmoid(self.output)))
-            delta_w1 = np.dot(self.layer0.T,
-                              (np.dot(2*(y_actual - self.output) * activations.derivative_sigmoid(self.output),
-                                      self.W2.T) * activations.derivative_relu(self.layer1)))
+            output_error = 2 * (y_actual - self.output)
+            delta_w3 = output_error * activations.derivative_sigmoid(self.output)
+            delta_w2 = np.dot(delta_w3, self.W3.T) * activations.derivative_sigmoid(self.layer2)
+            delta_w1 = np.dot(delta_w2, self.W2.T) * activations.derivative_relu(self.layer1)
 
-            self.W1 += delta_w1 * .2
-            self.W2 += delta_w2 * .2
+            self.W3 += np.dot(self.layer2.T, delta_w3)
+            self.W2 += np.dot(self.layer1.T, delta_w2)
+            self.W1 += np.dot(self.layer0.T, delta_w1)
 
         testing = []
         for k in np.arange(x_test.shape[0]):
             self.layer0 = x_test.iloc[[k]]
-            self.layer1 = activations.sigmoid_activation(np.dot(self.layer0, self.W1))
-            self.output = activations.sigmoid_activation(np.dot(self.layer1, self.W2))
+            self.layer1 = activations.relu_activation(np.dot(self.layer0, self.W1))
+            self.layer2 = activations.sigmoid_activation(np.dot(self.layer1, self.W2))
+            self.output = activations.sigmoid_activation(np.dot(self.layer2, self.W3))
             testing.append(self.output)
         df = pd.DataFrame({'tests': testing})
         y_test = pd.DataFrame(y_test)
