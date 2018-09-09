@@ -55,20 +55,17 @@ class ANN(object):
         self.b2 = np.full((1, 1), 1)
         self.bw1 = np.random.randn(1, 3)
         self.bw2 = np.random.randn(1, 1)
-        alpha = 0.4
-        for i in np.arange(20000):
+        alpha = 0.01
+        for i in np.arange(10000):
             ran = random.randint(0, 7199)
-            self.layer0 = x_train.iloc[[20]]
-            y_actual = y_train.iloc[[20]]
+            self.layer0 = x_train.iloc[[ran]]
+            y_actual = y_train.iloc[[ran]]
             # Hidden layer 1 Relu 5 nodes
             self.layer1 = activations.relu_activation(np.dot(self.layer0, self.W1))
             # Hidden layer 2 sigmoid activation 3 nodes
-            self.layer2 = activations.sigmoid_activation(np.dot(self.layer1, self.W2))
-            # self.layer2 = self.layer2 + activations.sigmoid_activation(np.dot(self.b1, self.bw1))
+            self.layer2 = activations.sigmoid_activation(np.dot(self.layer1, self.W2))# + activations.sigmoid_activation(np.dot(self.b1, self.bw1))
             # output layer sigmoid activation 1 node
-            self.output = activations.sigmoid_activation(np.dot(self.layer2, self.W3))
-            # self.output = self.output + activations.sigmoid_activation(np.dot(self.b2, self.bw2))
-
+            self.output = activations.sigmoid_activation(np.dot(self.layer2, self.W3))# + activations.sigmoid_activation(np.dot(self.b2, self.bw2))
             error = activations.cost_function(self.output[0], y_actual.iloc[0].values)
 
             if (i % 100) == 0:
@@ -80,27 +77,23 @@ class ANN(object):
             delta_w2 = np.dot(delta_w3, self.W3.T) * activations.derivative_sigmoid(self.layer2)
             delta_w1 = np.dot(delta_w2, self.W2.T) * activations.derivative_relu(self.layer1)
             #
-            # delta_b1 = np.dot(delta_w3, self.bw2.T) * activations.derivative_sigmoid(self.b2)
-            # self.bw2 += np.dot(self.b2.T, delta_w3)
-            # self.bw1 += np.dot(self.b1.T, delta_b1)
-            # todo update the bias terms on back prop
-
-            self.W3 += np.dot(self.layer2.T, delta_w3)
-            self.W2 += np.dot(self.layer1.T, delta_w2)
-            self.W1 += np.dot(self.layer0.T, delta_w1)
-
+            delta_b1 = np.dot(delta_w3, self.bw2.T) * activations.derivative_sigmoid(self.b2)
+            self.bw2 += np.dot(self.b2.T, delta_w3*.01)
+            self.bw1 += np.dot(self.b1.T, delta_b1*.01)
+            # backpro updating the weights using the known layers and their delta values
+            # Use alpha to adjust the learning rate
+            self.W3 += np.dot(self.layer2.T, delta_w3)*.1
+            self.W2 += np.dot(self.layer1.T, delta_w2)*.1
+            self.W1 += np.dot(self.layer0.T, delta_w1)*.1
 
         testing = []
         for k in np.arange(x_test.shape[0]):
             self.layer0 = x_test.iloc[[k]]
             self.layer1 = activations.relu_activation(np.dot(self.layer0, self.W1))
-            self.layer2 = activations.sigmoid_activation(np.dot(self.layer1, self.W2))
-            self.output = activations.sigmoid_activation(np.dot(self.layer2, self.W3))
-            testing.append(self.output)
-        df = pd.DataFrame({'tests': testing})
-        y_test = pd.DataFrame(y_test)
-        y_test = y_test.join(df)
-        print(testing)
+            self.layer2 = activations.sigmoid_activation(np.dot(self.layer1, self.W2))# + activations.sigmoid_activation(np.dot(self.b1, self.bw1))
+            self.output = activations.sigmoid_activation(np.dot(self.layer2, self.W3))# + activations.sigmoid_activation(np.dot(self.b2, self.bw2))
+            print(self.output)
+            testing.append(self.output[0])
         print('testing')
 
 

@@ -19,13 +19,13 @@ def derivative_sigmoid(z):
 
 
 def relu_activation(x):
-    return x * (x > 0)
+    return np.maximum(x, 0, x)
+    #return x * (x > 0)
 
 def derivative_relu(x):
-    x[x < 0] = 0
+    x[x <= 0] = 0
     x[x > 0] = 1
     return x
-    #return 1 * (x > 0)
 
 def cost_function(y_hat, y_actual):
     return float((y_hat - y_actual))
