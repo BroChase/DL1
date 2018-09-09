@@ -6,7 +6,7 @@
 import numpy as np
 from scipy.special import expit
 from sklearn.preprocessing import Imputer
-
+import matplotlib.pyplot as plt
 
 # sigmoid activation function
 def sigmoid_activation(z):
@@ -17,6 +17,11 @@ def sigmoid_activation(z):
 def derivative_sigmoid(z):
     return z * (1 - z)
 
+def thresh(x):
+    if x > .5:
+        return 1
+    else:
+        return 0
 
 def relu_activation(x):
     return np.maximum(x, 0, x)
