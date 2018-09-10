@@ -91,20 +91,46 @@ class ANN(object):
             delta_bw2 = np.dot(delta_bw3, self.bw2.T) * activations.derivative_relu(self.layer2)
             delta_bw1 = np.dot(delta_bw2, self.bw1.T) * activations.derivative_relu(self.layer1)
 
-            self.bw4 += np.dot(self.layer4, delta_bw4.T)*.01
-            self.bw3 += np.dot(self.layer3, delta_bw3.T)*.01
-            self.bw2 += np.dot(self.layer2, delta_bw2.T)*.01
-            self.bw1 += np.dot(self.layer1, delta_bw1.T)*.01
+            self.bw4 += np.dot(self.layer4, delta_bw4.T)*.1
+            self.bw3 += np.dot(self.layer3, delta_bw3.T)*.1
+            self.bw2 += np.dot(self.layer2, delta_bw2.T)*.1
+            self.bw1 += np.dot(self.layer1, delta_bw1.T)*.1
             # backpro updating the weights using the known layers and their delta values
             # Use alpha to adjust the learning rate
-            self.W5 += np.dot(self.layer4.T, delta_w5)*.01
-            self.W4 += np.dot(self.layer3.T, delta_w4)*.01
-            self.W3 += np.dot(self.layer2.T, delta_w3)*.01
-            self.W2 += np.dot(self.layer1.T, delta_w2)*.01
-            self.W1 += np.dot(self.layer0.T, delta_w1)*.01
+            self.W5 += np.dot(self.layer4.T, delta_w5)*.1
+            self.W4 += np.dot(self.layer3.T, delta_w4)*.1
+            self.W3 += np.dot(self.layer2.T, delta_w3)*.1
+            self.W2 += np.dot(self.layer1.T, delta_w2)*.1
+            self.W1 += np.dot(self.layer0.T, delta_w1)*.1
+
+        testing1 = []
+        for k in np.arange(x_train.shape[0]):
+            self.layer0 = x_train.iloc[[k]]
+            self.layer1 = activations.relu_activation(np.dot(self.layer0, self.W1))
+            # Hidden layer 2
+            self.layer2 = activations.relu_activation(np.dot(self.layer1, self.W2) + np.dot(self.bias, self.bw1))
+            # Hidden layer 3
+            self.layer3 = activations.relu_activation(np.dot(self.layer2, self.W3) + np.dot(self.bias, self.bw2))
+            # Hidden layer 4
+            self.layer4 = activations.sigmoid_activation(np.dot(self.layer3, self.W4) + np.dot(self.bias, self.bw3))
+            # Output layer
+            self.output = activations.sigmoid_activation(np.dot(self.layer4, self.W5) + np.dot(self.bias, self.bw4))
+
+            testing1.append(activations.thresh(self.output[0][0]))
+        y_pred_1 = np.array(testing1)
+        # cm = confusion_matrix(y_test, y_pred)
+        tn_1, fp_1, fn_1, tp_1 = confusion_matrix(y_train, y_pred_1).ravel()
+
+        accuracy = activations.accuracy(tp_1, fp_1, tn_1, fn_1)
+        precision = activations.precision(tp_1, fp_1)
+        recall = activations.recall(tp_1, fn_1)
+        f1 = activations.f1(precision, recall)
+        print(accuracy)
+        print(precision)
+        print(recall)
+        print(f1)
 
         testing = []
-        testing1 = []
         for k in np.arange(x_test.shape[0]):
             self.layer0 = x_test.iloc[[k]]
             self.layer1 = activations.relu_activation(np.dot(self.layer0, self.W1))
@@ -116,14 +142,20 @@ class ANN(object):
             self.layer4 = activations.sigmoid_activation(np.dot(self.layer3, self.W4)+np.dot(self.bias, self.bw3))
             # Output layer
             self.output = activations.sigmoid_activation(np.dot(self.layer4, self.W5)+np.dot(self.bias, self.bw4))
-            testing1.append(self.output[0][0])
+
             testing.append(activations.thresh(self.output[0][0]))
-        tes = np.array(testing)
-        tes1 = np.array(testing1)
-        y_pred = pd.DataFrame(tes)
-        y_pred1 = pd.DataFrame(tes1)
-        cm = confusion_matrix(y_test, tes)
-        tn, fp, fn, tp = confusion_matrix(y_test, tes).ravel()
+        y_pred = np.array(testing)
+        # cm = confusion_matrix(y_test, y_pred)
+        tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
+
+        accuracy = activations.accuracy(tp, fp, tn, fn)
+        precision = activations.precision(tp, fp)
+        recall = activations.recall(tp, fn)
+        f1 = activations.f1(precision, recall)
+        print(accuracy)
+        print(precision)
+        print(recall)
+        print(f1)
         print('testing')
 
 if __name__ == '__main__':

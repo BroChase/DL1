@@ -6,7 +6,6 @@
 import numpy as np
 from scipy.special import expit
 from sklearn.preprocessing import Imputer
-import matplotlib.pyplot as plt
 
 # sigmoid activation function
 def sigmoid_activation(z):
@@ -41,3 +40,27 @@ def missing_values(x):
     imputer = imputer.fit_transform(x)
     return imputer
 
+
+def precision(true_p, false_p):
+    if (true_p + false_p) == 0:
+        return 0
+    else:
+        return true_p / (true_p + false_p)
+
+def accuracy(true_p, false_p, true_n, false_n):
+    if (true_p + false_p + true_n + false_n) == 0:
+        return 0
+    else:
+        return (true_p + true_n) / (true_p + false_p + true_n + false_n)
+
+def recall(true_p, false_n):
+    if (true_p + false_n) == 0:
+        return 0
+    else:
+        return true_p / (true_p + false_n)
+
+def f1(precision, recall):
+    if (precision + recall) == 0:
+        return 0
+    else:
+        return 2 * ((precision * recall) / (precision + recall))
