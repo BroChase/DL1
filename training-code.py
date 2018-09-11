@@ -54,7 +54,9 @@ class ANN(object):
         self.W3 = np.random.randn(9, 5)
         self.W4 = np.random.randn(5, 3)
         self.W5 = np.random.randn(3, 1)
+        # bias term '1'
         self.bias = np.array([1])
+        # Bias wieghts for each hidden layer bias for first layer 'input' alraedy added into matrix
         self.bw1 = np.random.randn(1, 9)
         self.bw2 = np.random.randn(1, 5)
         self.bw3 = np.random.randn(1, 3)
@@ -63,13 +65,13 @@ class ANN(object):
             ran = random.randint(0, 7199)
             self.layer0 = x_train.iloc[[ran]]
             y_actual = y_train.iloc[[ran]]
-            # Hidden layer 1
+            # Hidden layer 1 Activation with layer0'input' dot with Weights 1 bias already inclused in inputs matrix
             self.layer1 = activations.relu_activation(np.dot(self.layer0, self.W1))
-            # Hidden layer 2
+            # Hidden layer 2 Activation with layer 1 dot with weights 2 and bias 1 added
             self.layer2 = activations.relu_activation(np.dot(self.layer1, self.W2)+np.dot(self.bias, self.bw1))
-            # Hidden layer 3
+            # Hidden layer 3 Activation with layer 2 dot with weights 3 and bias 2 added in
             self.layer3 = activations.relu_activation(np.dot(self.layer2, self.W3)+np.dot(self.bias, self.bw2))
-            # Hidden layer 4
+            # Hidden layer 4 Activation with layer 3 dot with weights 4 and bias 3 added in
             self.layer4 = activations.sigmoid_activation(np.dot(self.layer3, self.W4)+np.dot(self.bias, self.bw3))
             # Output layer
             self.output = activations.sigmoid_activation(np.dot(self.layer4, self.W5)+np.dot(self.bias, self.bw4))
@@ -78,8 +80,9 @@ class ANN(object):
             if (i % 100) == 0:
                 # print(y_actual.iloc[0].values, self.output[0])
                 print('Error: ' + str(np.mean(np.abs(error))))
-
+            # calculating the error between the actual and predicted
             output_error = y_actual - self.output
+            # deltas found based on the derivatives of the activations for each hidden layer
             delta_w5 = output_error * activations.derivative_sigmoid(self.output)
             delta_w4 = np.dot(delta_w5, self.W5.T) * activations.derivative_sigmoid(self.layer4)
             delta_w3 = np.dot(delta_w4, self.W4.T) * activations.derivative_relu(self.layer3)
@@ -90,7 +93,7 @@ class ANN(object):
             delta_bw3 = np.dot(delta_bw4, self.bw3.T) * activations.derivative_relu(self.layer3)
             delta_bw2 = np.dot(delta_bw3, self.bw2.T) * activations.derivative_relu(self.layer2)
             delta_bw1 = np.dot(delta_bw2, self.bw1.T) * activations.derivative_relu(self.layer1)
-
+            # the updated wights added to the previous weights 'adjusted by lambda of .1'
             self.bw4 += np.dot(self.layer4, delta_bw4.T)*.1
             self.bw3 += np.dot(self.layer3, delta_bw3.T)*.1
             self.bw2 += np.dot(self.layer2, delta_bw2.T)*.1
@@ -112,7 +115,7 @@ class ANN(object):
             # Hidden layer 3
             self.layer3 = activations.relu_activation(np.dot(self.layer2, self.W3) + np.dot(self.bias, self.bw2))
             # Hidden layer 4
-            self.layer4 = activations.relu_activation(np.dot(self.layer3, self.W4) + np.dot(self.bias, self.bw3))
+            self.layer4 = activations.sigmoid_activation(np.dot(self.layer3, self.W4) + np.dot(self.bias, self.bw3))
             # Output layer
             self.output = activations.sigmoid_activation(np.dot(self.layer4, self.W5) + np.dot(self.bias, self.bw4))
 
@@ -156,8 +159,6 @@ class ANN(object):
         print(precision)
         print(recall)
         print(f1)
-        print('test')
-
 
 if __name__ == '__main__':
 
