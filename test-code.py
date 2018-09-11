@@ -17,11 +17,13 @@ class ANN(object):
     def __init__(self):
         # Read the data from csv file
         dataset = pd.read_csv('dataset.csv')
+        # todo store the customer id in pandas df before deleting it
         # Dropping CustomerId, Surname, Geography from attributes
         dataset = dataset.drop(['CustomerId', 'Surname', 'Geography'], axis=1)
 
         # Split the Dataset into depend/indep x/y values
         x = dataset.iloc[:, :-1]
+        # todo remove the y
         y = dataset.iloc[:, -1]
 
         # Onehot enocode the Gender attribute
@@ -31,7 +33,7 @@ class ANN(object):
         x = x.join(one_hot)
         # Check for NaN values in data.
         x = activations.missing_values(x)
-
+        # todo remove the test split
         x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=.20, random_state=12345)
         SC = StandardScaler()
         # Scale data 'standardscaler defaults
@@ -124,33 +126,6 @@ class ANN(object):
         accuracy = activations.accuracy(tp_1, fp_1, tn_1, fn_1)
         precision = activations.precision(tp_1, fp_1)
         recall = activations.recall(tp_1, fn_1)
-        f1 = activations.f1(precision, recall)
-        print(accuracy)
-        print(precision)
-        print(recall)
-        print(f1)
-
-        testing = []
-        for k in np.arange(x_test.shape[0]):
-            self.layer0 = x_test.iloc[[k]]
-            self.layer1 = activations.relu_activation(np.dot(self.layer0, self.W1))
-            # Hidden layer 2
-            self.layer2 = activations.relu_activation(np.dot(self.layer1, self.W2)+np.dot(self.bias, self.bw1))
-            # Hidden layer 3
-            self.layer3 = activations.relu_activation(np.dot(self.layer2, self.W3)+np.dot(self.bias, self.bw2))
-            # Hidden layer 4
-            self.layer4 = activations.sigmoid_activation(np.dot(self.layer3, self.W4)+np.dot(self.bias, self.bw3))
-            # Output layer
-            self.output = activations.sigmoid_activation(np.dot(self.layer4, self.W5)+np.dot(self.bias, self.bw4))
-
-            testing.append(activations.thresh(self.output[0][0]))
-        y_pred = np.array(testing)
-        # cm = confusion_matrix(y_test, y_pred)
-        tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
-
-        accuracy = activations.accuracy(tp, fp, tn, fn)
-        precision = activations.precision(tp, fp)
-        recall = activations.recall(tp, fn)
         f1 = activations.f1(precision, recall)
         print(accuracy)
         print(precision)
