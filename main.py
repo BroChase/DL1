@@ -112,7 +112,7 @@ class ANN(object):
             # Hidden layer 3
             self.layer3 = activations.relu_activation(np.dot(self.layer2, self.W3) + np.dot(self.bias, self.bw2))
             # Hidden layer 4
-            self.layer4 = activations.sigmoid_activation(np.dot(self.layer3, self.W4) + np.dot(self.bias, self.bw3))
+            self.layer4 = activations.relu_activation(np.dot(self.layer3, self.W4) + np.dot(self.bias, self.bw3))
             # Output layer
             self.output = activations.sigmoid_activation(np.dot(self.layer4, self.W5) + np.dot(self.bias, self.bw4))
 
@@ -156,6 +156,7 @@ class ANN(object):
         print(precision)
         print(recall)
         print(f1)
+        print('test')
 
 
 if __name__ == '__main__':
