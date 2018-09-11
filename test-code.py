@@ -17,13 +17,16 @@ class ANN(object):
     def __init__(self):
         # Read the data from csv file
         dataset = pd.read_csv('dataset.csv')
-        # todo store the customer id in pandas df before deleting it
+        dataset2 = pd.read_csv('judge.csv')
+        data_test = pd.DataFrame(dataset2['CustomerId'])
         # Dropping CustomerId, Surname, Geography from attributes
         dataset = dataset.drop(['CustomerId', 'Surname', 'Geography'], axis=1)
+        dataset2 = dataset2.drop(['CustomerId', 'Surname', 'Geography'], axis=1)
 
         # Split the Dataset into depend/indep x/y values
         x = dataset.iloc[:, :-1]
-        # todo remove the y
+        x_test = dataset2.iloc[:, :]
+
         y = dataset.iloc[:, -1]
 
         # Onehot enocode the Gender attribute
@@ -31,18 +34,24 @@ class ANN(object):
         # Drop Gender from dataset and join the onehot encoded
         x = x.drop(['Gender'], axis=1)
         x = x.join(one_hot)
+
+        # Onehot encode the gender for the test set
+        one_hot = pd.get_dummies(dataset['Gender'])
+        x_test = x_test.drop(['Gender'], axis=1)
+        x_test = x_test.join(one_hot)
+
         # Check for NaN values in data.
         x = activations.missing_values(x)
-        # todo remove the test split
-        x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=.20, random_state=12345)
+        x_test = activations.missing_values(x_test)
+        # x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=.20, random_state=12345)
         SC = StandardScaler()
         # Scale data 'standardscaler defaults
-        x_train = SC.fit_transform(x_train)
+        x_train = SC.fit_transform(x)
         # Add Bias term
         x_train = np.c_[np.ones(x_train.shape[0]), x_train]
         x_train = pd.DataFrame(x_train)
         # Fix indexing on dataframe
-        y_train = pd.DataFrame(y_train)
+        y_train = pd.DataFrame(y)
         y_train = y_train.reset_index()
         y_train = y_train.drop(['index'], axis=1)
 
@@ -106,8 +115,8 @@ class ANN(object):
             self.W1 += np.dot(self.layer0.T, delta_w1)*.1
 
         testing1 = []
-        for k in np.arange(x_train.shape[0]):
-            self.layer0 = x_train.iloc[[k]]
+        for k in np.arange(x_test.shape[0]):
+            self.layer0 = x_test.iloc[[k]]
             self.layer1 = activations.relu_activation(np.dot(self.layer0, self.W1))
             # Hidden layer 2
             self.layer2 = activations.relu_activation(np.dot(self.layer1, self.W2) + np.dot(self.bias, self.bw1))
@@ -119,18 +128,10 @@ class ANN(object):
             self.output = activations.sigmoid_activation(np.dot(self.layer4, self.W5) + np.dot(self.bias, self.bw4))
 
             testing1.append(activations.thresh(self.output[0][0]))
-        y_pred_1 = np.array(testing1)
-        # cm = confusion_matrix(y_test, y_pred)
-        tn_1, fp_1, fn_1, tp_1 = confusion_matrix(y_train, y_pred_1).ravel()
-
-        accuracy = activations.accuracy(tp_1, fp_1, tn_1, fn_1)
-        precision = activations.precision(tp_1, fp_1)
-        recall = activations.recall(tp_1, fn_1)
-        f1 = activations.f1(precision, recall)
-        print(accuracy)
-        print(precision)
-        print(recall)
-        print(f1)
+        y_pred = pd.DataFrame(testing1)
+        data_test = data_test.join(y_pred)
+        data_test.columns = ['CustomerId', 'Exited']
+        data_test.to_csv('judge-pred.csv', index=False)
 
 
 if __name__ == '__main__':
